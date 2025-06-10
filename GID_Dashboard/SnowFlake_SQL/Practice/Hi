@@ -1,1 +1,79 @@
+//What is the most downloaded pages? 
+SELECT 
+    YEAR_EVENT as YEARS,
+    month_event AS MONTHS,
+    INITCAP (Replace (REPLACE (replace (replace (REPLACE (page_path ,'/', ''), '-', ' '), '=', ' '), '&',' '), 'datasets', '')) AS PAGES,
+    EVENT_COUNT AS EVENTS,
+FROM OPEN_DATA.PUBLIC.DATA_PORTAL_GA_EVENTS
+ORDER BY
+    EVENT_COUNT desc;
+    
+//New
+SELECT 
+    YEAR_EVENT as YEARS,
+    month_event AS MONTHS,
+    INITCAP (Replace (REPLACE (replace (replace (REPLACE (page_path ,'/', ''), '-', ' '), '=', ' '), '&',' '), 'datasets', '')) AS PAGES,
+    Sum (EVENT_COUNT) AS EVENTS,
+FROM OPEN_DATA.PUBLIC.DATA_PORTAL_GA_EVENTS
+where PAGES != ''
+AND PAGES != 'About'
+GROUP BY YEARS, MONTHS, PAGES
+ORDER BY Years DESC, months asc, PAGES;
+
+    
+
+//What is the most pages views?
+SELECT
+    year_event AS YEARS,
+    month_event AS MONTHS, 
+    INITCAP (LTRIM (Replace (replace (REPLACE (REPLACE (REPLACE (replace (replace (page_path_plus_query_string, '?department', ''), '?category=', ''), '?Department', ''),'/', ''), '-', ' '), '=', ' '), '&',' '), '/datase')) AS "PAGE NAMES",
+from OPEN_DATA.PUBLIC.DATA_PORTAL_GA_PAGES
+group by Years, months, "PAGE NAMES" 
+ORDER BY YEARS DESC, MONTHS ASC, "PAGE NAMES";
+
+
+//New
+SELECT
+    year_event AS YEARS,
+    month_event AS MONTHS,
+    INITCAP (LTRIM (Replace (replace (REPLACE (REPLACE (REPLACE (replace (replace (page_path_plus_query_string, '?department', ''), '?category=', ''), '?Department', ''),'/', ''), '-', ' '), '=', ' '), '&',' '), '/datase')) AS "PAGE NAMES",
+    SUM (screen_page_views) as "VIEWS"
+from OPEN_DATA.PUBLIC.DATA_PORTAL_GA_PAGES
+where "PAGE NAMES" != ''
+And "PAGE NAMES" != 'About'
+group by Years, months, "PAGE NAMES" 
+ORDER BY YEARS DESC, MONTHS ASC, "PAGE NAMES";
+
+
+    
+//Which pages have the most downloaded and views?
+
+SELECT a.date_event as DATES, a.page_path AS PAGES, a.event_count AS DOWNLOADS, b.page_path_plus_query_string AS PAGES, b.screen_page_views AS VIEWS
+FROM OPEN_DATA.PUBLIC.DATA_PORTAL_GA_EVENTS as a 
+INNER JOIN OPEN_DATA.PUBLIC.DATA_PORTAL_GA_PAGES as b
+ON a.page_path = b.page_path_plus_query_string
+ORDER BY 
+VIEWS DESC, 
+DOWNLOADS DESC;
+
+
+
+//What projects are still 'inspecting' and 'in review' in 2024?
+select 
+project_id, 
+project_type, 
+project_decision_type, 
+project_status,
+project_processing_code,
+project_title,
+project_scope,
+project_create_date,
+deemed_complete_date, 
+application_expire_date
+FROM OPEN_DATA.PUBLIC.DSD_PROJECTS
+WHERE 
+YEAR(PROJECT_CREATE_DATE) = 2024
+AND PROJECT_SCOPE LIKE 'MIRA%'
+AND Project_status IN ('Inspecting', 'In Review')
+ORDER BY PROJECT_ID;
 
