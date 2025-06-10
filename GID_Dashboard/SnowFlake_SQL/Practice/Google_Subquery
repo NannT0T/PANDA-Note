@@ -1,0 +1,30 @@
+//Max users and Max Views
+
+SELECT YEARS,
+MONTHS,
+PAGES,
+VIEWERS,
+mode(session_source) as most_frequent_source,
+listagg(distinct session_source, ', ') as all_sources,
+max (TOTAL_USERS) as USERS,  
+max (SCREEN_PAGE_VIEWS) AS VIEWS
+FROM
+(SELECT 
+    a. date_event,
+    a.YEAR_EVENT AS YEARS,
+    a.MONTH_EVENT AS MONTHS, 
+    INITCAP (replace (Replace (replace (REPLACE (REPLACE (REPLACE (replace (replace (a.LANDING_PAGE_PLUS_QUERY_STRING, '?department', ''), '?category=', ''), '?Department', ''),'/', ''), '-', ' '), '=', ' '), '&',' '), 'datasets', '')) AS PAGES,
+    replace (b.NEW_VS_RETURNING, '(not set)', 'N/A') AS "VIEWERS", 
+    a.session_source,
+    b.total_users,
+    b.screen_page_views
+    --max (b.TOTAL_USERS) as "USERS",  
+    --max (b.SCREEN_PAGE_VIEWS) AS "VIEWS"
+FROM OPEN_DATA.PUBLIC.DATA_PORTAL_GA_TRAFFIC_SOURCES AS a
+JOIN OPEN_DATA.PUBLIC.DATA_PORTAL_GA_USERS_SESSIONS AS b
+ON a.DATE_EVENT = b.date_event
+where PAGES != ''
+And PAGES != 'About'
+--GROUP BY a.date_event, a.year_event, a.month_event, PAGES, VIEWERS
+ORDER BY date_event desc)
+GROUP BY years, months, PAGES, VIEWERS
