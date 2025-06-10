@@ -1,0 +1,112 @@
+-- Add comm_plan_name to select statement for new AND closed AND unique new as well as the groupby
+-- Add another outer join similar to the new sub query with an additional where clause for parent_id is null
+
+
+select
+    *
+from
+    (
+        select
+            new.total_new_reports,
+            closed.total_closed_reports,
+            coalesce(new.service_name, closed.service_name) as service_name,
+            coalesce(new.date_month, closed.date_month) as date_month,
+            coalesce(new.date_year, closed.date_year) as date_year,
+            coalesce(new.fiscal_year, closed.fiscal_year) as fiscal_year
+        from
+            (
+                select
+                    count(distinct g.request_id) as total_new_reports,
+                    g.service_name,
+                    dr.date_month,
+                    dr.date_year,
+                    dr.fiscal_year
+                from
+                    (
+                        select
+                            request_id,
+                            to_date(date_requested) as date_requested,
+                            service_name
+                        from
+                            get_it_done
+                        where
+                            council_district = '1'
+                            and date_requested >= '2022-07-01'
+                    ) g
+                    left join city.public.dimension_date dr on g.date_requested = dr.date_full
+                group by
+                    g.service_name,
+                    dr.date_month,
+                    dr.date_year,
+                    dr.fiscal_year
+            ) new full
+            outer join (
+                select
+                    count(distinct g.request_id) as total_closed_reports,
+                    g.service_name,
+                    dr.date_month,
+                    dr.date_year,
+                    dr.fiscal_year
+                from
+                    (
+                        select
+                            request_id,
+                            to_date(date_closed) as date_closed,
+                            service_name
+                        from
+                            get_it_done
+                        where
+                            council_district = '1'
+                            and (
+                                date_closed is not null
+                                and date_closed >= '2022-07-01'
+                            )
+                    ) g
+                    left join city.public.dimension_date dr on g.date_closed = dr.date_full
+                group by
+                    g.service_name,
+                    dr.date_month,
+                    dr.date_year,
+                    dr.fiscal_year
+            ) closed
+            outer join(
+            -- insert selection for unique new
+            -- add where clause for where parent_id is null
+            )
+            on new.service_name = closed.service_name
+            and new.date_month = closed.date_month
+            and new.date_year = closed.date_year
+            and new.fiscal_year = closed.fiscal_year
+    )
+order by
+    date_month,
+    date_year,
+    fiscal_year,
+    service_name
+
+
+select
+    request_id,
+    service_name,
+    date_requested,
+    date_closed,
+    case_age,
+    request_status
+from
+    get_it_done
+where
+    council_district = '8'
+    and 
+    date_closed is null and
+    date_requested >= '2022-07-01'
+
+
+select
+                            request_id,
+                            to_date(date_requested) as date_requested,
+                            service_name
+                        from
+                            get_it_done
+                        where
+                            council_district = '1'
+                            and date_requested >= '2022-07-01'
