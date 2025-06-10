@@ -1,0 +1,49 @@
+select
+    g.comm_plan_name,
+    count( d.date_requested) as Total_New_Reports,
+    count(g.DATE_CLOSED) as Total_Closed_Reports,
+    g.service_name,
+    concat_ws('/',to_varchar(dr.date_month),to_varchar(dr.date_year)) as month_and_year,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year
+from
+    ((
+        select
+            council_district,
+            comm_plan_name,
+            request_status,
+            request_id,
+            to_date(date_closed) as date_closed,
+            service_name
+        from
+            get_it_done
+        where
+            date_closed >= '2022-07-01'
+            and council_district = '1'
+    ) g
+    left join
+(
+        select
+            council_district,
+            comm_plan_name,
+            request_status,
+            request_id,
+            to_date(date_requested) as date_requested,
+            service_name
+        from
+            get_it_done
+        where
+            date_requested >= '2022-07-01'
+            and council_district = '1'
+    ) d)
+
+left join city.public.dimension_date dr on d.date_requested = dr.date_full
+group by
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    g.service_name,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year;
