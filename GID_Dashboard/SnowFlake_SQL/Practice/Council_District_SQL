@@ -1,0 +1,220 @@
+--left join between get_it_done and dimension_date where date_requested = date_full
+--select count(distinct request_id) from the left join 
+--group by fiscal_year
+
+
+
+SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.DATE_MONTH,
+C.DAY_OF_WEEK,
+C.FISCAL_YEAR,
+DATE_REQUEST,
+C.CITY_BUSINESS_DAY,
+C.CASE_RECORD_TYPE,
+C.SERVICE_NAME,
+C.SERVICE_NAME_DETAIL,
+C.DATE_CLOSED,
+C.REQUEST_STATUS, 
+C.LATITUDE, 
+C.LONGITUDE, 
+C.STREET_ADDR, 
+SUBSTR(C.ZIP, 1, 5) AS ZIPCODE, 
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_ID, C.COMM_PLAN_NAME, C.CASE_ORIGIN, C.PUBLIC_URL
+FROM
+(SELECT
+a.request_id,
+b.DATE_MONTH,
+b.DAY_OF_WEEK,
+b.FISCAL_YEAR,
+b.CITY_BUSINESS_DAY,
+Cast(a.DATE_REQUESTED as DATE) AS DATE_REQUEST, 
+a.CASE_AGE,
+a.CASE_RECORD_TYPE,
+a.SERVICE_NAME,
+a.SERVICE_NAME_DETAIL,
+a.DATE_CLOSED,
+a.REQUEST_STATUS, 
+a.LATITUDE, 
+a.LONGITUDE, 
+a.STREET_ADDR, 
+a.ZIP, 
+a.COUNCIL_DISTRICT, 
+a.COMM_PLAN_ID, a.COMM_PLAN_NAME, a.CASE_ORIGIN, a.PUBLIC_URL
+from OPEN_DATA.PUBLIC.GET_IT_DONE AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_requested = b.date_full) as C
+Group by C.fiscal_year, C.DATE_MONTH, C.DAY_OF_WEEK, C.CITY_BUSINESS_DAY, DATE_REQUEST, C.CASE_RECORD_TYPE, C.SERVICE_NAME, C.SERVICE_NAME_DETAIL, C.DATE_CLOSED, C.REQUEST_STATUS, C.LATITUDE, C.LONGITUDE, C.STREET_ADDR, C.COUNCIL_DISTRICT, C.COMM_PLAN_ID, C.COMM_PLAN_NAME, C.CASE_ORIGIN, C.PUBLIC_URL, ZIPCODE
+ORDER BY C.fiscal_year ASC, C.DATE_MONTH ASC, DATE_REQUEST ASC;
+
+
+
+
+SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.DATE_MONTH,
+C.DATE_YEAR,
+C.FISCAL_YEAR, 
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_NAME
+FROM
+(SELECT
+a.request_id,
+b.DATE_MONTH,
+b.DATE_YEAR,
+b.FISCAL_YEAR,
+a.DATE_REQUEST,
+a.council_district,
+a.COMM_PLAN_NAME
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_id, council_district, comm_plan_name from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.fiscal_year, C.DATE_MONTH, C.DATE_YEAR, C.COUNCIL_DISTRICT, C.COMM_PLAN_NAME
+ORDER BY C.fiscal_year ASC, C.DATE_YEAR ASC;
+
+
+SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.DATE_MONTH,
+C.DATE_YEAR,
+C.FISCAL_YEAR, 
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_NAME,
+C.REQUEST_STATUS
+FROM
+(SELECT
+a.request_status,
+a.request_id,
+b.DATE_MONTH,
+b.DATE_YEAR,
+b.FISCAL_YEAR,
+a.DATE_REQUEST,
+a.council_district,
+a.COMM_PLAN_NAME
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_status, request_id, council_district, comm_plan_name from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL and comm_plan_name is not NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.fiscal_year, C.DATE_MONTH, C.DATE_YEAR, C.COUNCIL_DISTRICT, C.COMM_PLAN_NAME, C.REQUEST_STATUS
+ORDER BY C.fiscal_year ASC, C.DATE_YEAR ASC;
+
+
+
+
+
+SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.MONTH_YEAR,
+C.MONTH_FY,
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_NAME,
+C.REQUEST_STATUS
+FROM
+(SELECT
+a.request_status,
+a.request_id,
+CONCAT(b.DATE_MONTH ||'-'||b.DATE_YEAR) AS MONTH_YEAR,
+CONCAT(b.DATE_MONTH ||'-'||b.FISCAL_YEAR) AS MONTH_FY,
+a.DATE_REQUEST,
+a.council_district,
+a.COMM_PLAN_NAME
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_status, request_id, council_district, comm_plan_name from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL and comm_plan_name is not NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.MONTH_YEAR, C.MONTH_FY, C.COUNCIL_DISTRICT, C.COMM_PLAN_NAME, C.REQUEST_STATUS
+ORDER BY C.MONTH_YEAR ASC, C.MONTH_FY ASC;
+
+
+
+SELECT LONGITUDE, LATITUDE,  COUNCIL_DISTRICT
+FROM OPEN_DATA.PUBLIC.GET_IT_DONE
+
+
+ SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.MONTH_YEAR,
+C.MONTH_FY,
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_NAME,
+C.REQUEST_STATUS,
+C.LONGITUDE, 
+C.LATITUDE
+FROM
+(SELECT
+a.request_status,
+a.request_id,
+CONCAT(b.DATE_MONTH ||'-'||b.DATE_YEAR) AS MONTH_YEAR,
+CONCAT(b.DATE_MONTH ||'-'||b.FISCAL_YEAR) AS MONTH_FY,
+a.DATE_REQUEST,
+a.council_district,
+a.COMM_PLAN_NAME,
+a.longitude, 
+a.latitude
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_status, request_id, council_district, comm_plan_name, longitude, latitude from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL and comm_plan_name is not NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.MONTH_YEAR, C.MONTH_FY, C.COUNCIL_DISTRICT, C.COMM_PLAN_NAME, C.REQUEST_STATUS, C.longitude, C.latitude
+ORDER BY C.MONTH_YEAR ASC, C.MONTH_FY ASC;
+
+
+
+--Communities Request: 
+
+SELECT
+C.request_id As REQUEST_ID,
+count(distinct C.request_id) As REQUEST_ID_COUNT,
+C.MONTH_YEAR,
+C.MONTH_FY,
+C.COUNCIL_DISTRICT,   
+C.COMM_PLAN_NAME,
+C.REQUEST_STATUS,
+C.LONGITUDE, 
+C.LATITUDE,
+C.service_name
+FROM
+(SELECT
+a.request_status,
+a.request_id,
+CONCAT(b.DATE_MONTH ||'-'||b.DATE_YEAR) AS MONTH_YEAR,
+CONCAT(b.DATE_MONTH ||'-'||b.FISCAL_YEAR) AS MONTH_FY,
+a.DATE_REQUEST,
+a.council_district,
+a.COMM_PLAN_NAME,
+a.longitude, 
+a.latitude,
+a.service_name
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_status, request_id, council_district, comm_plan_name, longitude, latitude, service_name from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL and comm_plan_name is not NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.MONTH_YEAR, C.MONTH_FY, C.COUNCIL_DISTRICT, C.COMM_PLAN_NAME, C.REQUEST_STATUS, C.longitude, C.latitude, C.service_name, REQUEST_ID
+ORDER BY C.MONTH_YEAR DESC, C.MONTH_FY DESC;
+
+
+
+Select * from OPEN_DATA.PUBLIC.GET_IT_DONE
+
+
+SELECT
+count(distinct C.request_id) As REQUEST_ID,
+C.REQUEST_STATUS,
+C.service_name
+FROM
+(SELECT
+a.request_status,
+a.request_id,
+a.service_name
+from ( Select DATE(DATE_REQUESTED) AS DATE_REQUEST, request_status, request_id, service_name from OPEN_DATA.PUBLIC.GET_IT_DONE
+ Where parent_id is NULL and comm_plan_name is not NULL) AS a
+LEFT JOIN CITY.PUBLIC.DIMENSION_DATE AS b
+ON a.date_request = b.date_full) as C
+Group by C.REQUEST_STATUS, C.service_name
+ORDER BY C.service_name;
+
+
+Select * FROM OPEN_DATA.PUBLIC.GET_IT_DONE
+WHERE REQUEST_ID = '4992370';
