@@ -1,0 +1,33 @@
+//Searched for employees' information in the City
+SELECT 
+Distinct (FULL_NAME),
+title,
+department,
+email,
+office_address,
+street_address, 
+manager_name, 
+manager_title, 
+manager_email
+FROM CITY.PUBLIC.ACTIVE_DIRECTORY_HIERARCHY
+WHERE 
+FULL_NAME LIKE 'Ng%'
+ORDER by full_name asc;
+
+
+//Management interns, Full_name starts with letter 'N'
+SELECT 
+Distinct (FULL_NAME),
+title,
+department,
+email,
+office_address,
+street_address, 
+manager_name, 
+manager_title, 
+manager_email
+FROM CITY.PUBLIC.ACTIVE_DIRECTORY_HIERARCHY
+WHERE title like 'M%'
+AND FULL_NAME like 'Ng%'
+AND DEPARTMENT like 'H%'
+ORDER by full_name asc;
