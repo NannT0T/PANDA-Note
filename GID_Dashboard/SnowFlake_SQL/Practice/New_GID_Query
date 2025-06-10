@@ -1,0 +1,110 @@
+SELECT
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    COUNT(DISTINCT g.request_id) AS request_count,
+    'TOTAL RECEIVED' as count_type,
+    g.service_name,
+    concat_ws('/',to_varchar(dr.date_month),to_varchar(dr.date_year)) as month_and_year,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year
+FROM
+    (
+        SELECT
+            council_district,
+            comm_plan_name,
+            request_id,
+            TO_DATE(date_requested) AS date_requested,
+            parent_id,
+            request_status,
+            service_name
+        FROM get_it_done
+        WHERE
+            date_requested >= '2022-07-01'
+            and council_district = '1'
+    ) g
+LEFT JOIN city.public.dimension_date dr 
+ON g.date_requested = dr.date_full
+GROUP BY
+g.council_district,
+g.comm_plan_name,
+g.request_status,
+g.service_name,
+dr.date_month,
+dr.date_year,
+dr.fiscal_year
+union
+SELECT
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    COUNT(DISTINCT CASE WHEN g.parent_id is null THEN g.request_id END) AS request_count,
+    'TOTAL UNIQUE RECEIVED' as count_type,
+    g.service_name,
+    concat_ws('/',to_varchar(dr.date_month),to_varchar(dr.date_year)) as month_and_year,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year
+FROM
+    (
+        SELECT
+            council_district,
+            comm_plan_name,
+            request_id,
+            TO_DATE(date_requested) AS date_requested,
+            parent_id,
+            request_status,
+            service_name
+        FROM get_it_done
+        WHERE
+            date_requested >= '2022-07-01'
+            and council_district = '1'
+    ) g
+LEFT JOIN city.public.dimension_date dr 
+ON g.date_requested = dr.date_full
+GROUP BY
+g.council_district,
+g.comm_plan_name,
+g.request_status,
+g.service_name,
+dr.date_month,
+dr.date_year,
+dr.fiscal_year  
+union         
+select
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    count(distinct g.request_id) as request_count,
+    'TOTAL CLOSED' as count_type,
+    g.service_name,
+    concat_ws('/',to_varchar(dr.date_month),to_varchar(dr.date_year)) as month_and_year,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year
+from
+    (
+        select
+            council_district,
+            comm_plan_name,
+            request_status,
+            request_id,
+            to_date(date_closed) as date_closed,
+            service_name
+        from
+            get_it_done
+        where
+            date_closed is not null
+            and date_closed >= '2022-07-01'
+            and council_district = '1'
+    ) g
+    left join city.public.dimension_date dr on g.date_closed = dr.date_full
+group by
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    g.service_name,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year;
