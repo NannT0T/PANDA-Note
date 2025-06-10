@@ -1,0 +1,43 @@
+SELECT
+    g.request_id,
+    g.council_district,
+    g.comm_plan_name,
+    g.request_status,
+    COUNT(DISTINCT g.request_id) AS request_count,
+    g.service_name,
+    concat_ws('/',to_varchar(dr.date_month),to_varchar(dr.date_year)) as month_and_year,
+    dr.date_month,
+    dr.date_year,
+    dr.fiscal_year,
+    g.longitude,
+    g.latitude
+FROM
+    (
+        SELECT
+            council_district,
+            comm_plan_name,
+            request_id,
+            TO_DATE(date_requested) AS date_requested,
+            parent_id,
+            request_status,
+            service_name,
+            latitude,
+            longitude
+        FROM get_it_done
+        WHERE
+            date_requested >= '2022-07-01'
+            and council_district = '1'
+    ) g
+LEFT JOIN city.public.dimension_date dr 
+ON g.date_requested = dr.date_full
+GROUP BY
+g.request_id,
+g.council_district,
+g.comm_plan_name,
+g.request_status,
+g.service_name,
+dr.date_month,
+dr.date_year,
+dr.fiscal_year,
+g.longitude,
+g.latitude;
